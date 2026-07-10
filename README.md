@@ -4,9 +4,14 @@
 [简体中文](README.zh.md)
 
 ## INTRODUCTION
-Welcome to Polaris.This is the first chapter of the tutorial series.
-In this chapter, you need to complete or learn the following things:
-- Environment configuration
+Polaris is a deep learning training and inference framework that focuses on *teaching* from scratch. The entire project is developed using C++ and CUDA, so you need to have a certain foundation in C++.
+This project focuses on high performance, supplemented by deep learning frameworks, to learn low-level thinking (the author is also continuously learning :))  
+Therefore, if you just want to understand *automatic differentiation*, *computational graphs*, *Transformer principles*, then you can choose other better projects, such as karpathy/micrograd or tinygrad.  
+If you want to *train a large model using C++*, *know what is happening inside PyTorch*, *learn data structures, computer organization principles, and computer architecture in programming applications*,  
+then this project is the best choice.
+Since I am a junior student, there may inevitably be bugs, omissions, inaccuracies, and even errors in the project. I hope everyone can be understanding, and I am also happy to accept criticism and corrections.  
+
+In this chapter, we focus on:
 - Engineering specifications
 - Introduction to deep learning
 - Linear algebra and deep learning
@@ -14,10 +19,6 @@ In this chapter, you need to complete or learn the following things:
 Before learning, you should master the following knowledge:
 - Basic knowledge of linear algebra (mainly matrices)
 - C/C++ basics (data types, pointers, functions, structures, classes)
-
-## Environment configuration
-It is recommended to use VSCode to learn this project. There are many tutorials online on how to configure the C++ environment for VSCode, so I won't go into detail here.
-The additional dependency that needs to be configured is CMake.
 
 ## Engineering specifications
 **To do a good job, one must first sharpen one's tools.**  
@@ -41,3 +42,6 @@ By the way, `this project is more suitable for readers who are interested in sys
 Linear algebra is not a very advanced field. You can think of linear algebra as a carrier of `information`, and one of the most important concepts in deep learning is information. How to carry more information in a unit space is a very important topic. For example, if a matrix is a singular matrix, then it is not invertible, and it is a `bad matrix` (quoted from MIT 18.06 Gilbert Strang), because this matrix carries some `nonsense`. If you don't know what a singular matrix is, don't worry. Everyone should have learned about systems of linear equations:
 ```{2x+4=2y,4x+8=4y}``
 Obviously, these two equations cannot be solved for a unique solution because the second equation is just twice the first equation. Therefore, we say that this equation does not carry enough information.
+
+## Guide
+Next, you can go to [tensor.h](/include/tensor.h) to start your first learning. If you encounter any confusion during the learning process, it is recommended to ask AI, but please ensure that you can reproduce it without relying on AI.
