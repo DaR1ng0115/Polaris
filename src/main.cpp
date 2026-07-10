@@ -1,21 +1,24 @@
 #include <iostream>
+#include <chrono>
 #include "../include/tensor.h"
+#include "../include/tensor_test.h"
 
 int main() {
-    Tensor t1(2, 3);
-    Tensor t2(2, 3);
-    Tensor t3(2, 3);
+    Tensor t1 = Tensor(100000, 5000);
+    Tensor t2 = Tensor(100000, 5000);
+    Tensor t3 = Tensor(100000, 5000);
 
-    for(int i=0; i<6; ++i) {
-        t1.data()[i] = i+1;
-        t2.data()[i] = 2*i;
-    }
+    DataGeneration(t1);
+    DataGeneration(t2);
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     t3 = t1 + t2;
 
-    for(int i=0; i<6; ++i) {
-        std::cout << t3.data()[i] << " ";
-        std::cout << "\n";
-    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "TIME : " << us.count() / 1000.0 << " ms";
+
+    std::cout << "\n";
     return 0;
 }
