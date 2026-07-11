@@ -32,5 +32,7 @@ int main() {
     auto ms_matrix = std::chrono::duration_cast<std::chrono::milliseconds>(end_matrix - start_matrix);
     std::cout << ms_matrix.count() / 1000.0 << "ms\n";
 
+    std::cout << m3(300, 255) << "\n";
+
     return 0;
 }

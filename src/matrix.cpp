@@ -65,6 +65,18 @@ const float* Matrix::data() const {
     return this->data_.data();
 }
 
+// 此处的加号重载，有一个性能上的问题，即返回值return res;会导致拷贝。
+// 现在可以思考一下，浅拷贝(引用)会导致悬挂指针，因为一旦出了函数定义域时，res就会被销毁，那么引用指向的就是一个被销毁的对象，即悬挂指针。
+// 深拷贝，即现在的实现方式，如果数据量过大，会限制于内存带宽。
+// 那么有没有什么办法解决上面的那些问题呢？
+// 解决方法就是"移动构造"，通俗的说，移动构造就是把指针"偷"过来。
+// 比如两个vector，vec1[地址:0x1000:1KB数据]，vec2[地址:0x2000:无数据]
+// 那么使用移动构造，相当于直接将0x1000地址的所有权给vec2，原来的vec1悬空
+// 即变成vec2[地址:0x1000:1KB数据]，vec1 = nullptr
+// 不过移动构造不是完美的，它的问题在于，数据从始至终只有一份，原指针被悬空了
+// 但在此处是完美适配的，因为res离开函数作用域就会被销毁，也就是说我们本来就只需要一份数据
+// 因此，未来使用移动构造的时候，先思考逻辑上到底是只需要一份数据，还是需要实际拷贝出第二份数据
+
 Matrix Matrix::operator+(const Matrix &other) const {
     assert(this->rows() == other.rows() && this->cols() == other.cols());
     Matrix res(this->rows(), this->cols());
@@ -112,3 +124,18 @@ const float& Matrix::operator()(int rows_idx, int cols_idx) const {
     assert(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_);
     return this->data_[rows_idx*this->cols_+cols_idx];
 }
+
+/*
+至此，我们实现了一个基础matrix类。
+回顾一下，我们从定义一个matrix对象应该拥有什么属性，随后定义了接口函数，到最后重载运算符，使其使用逻辑更自然高效。
+涉及的C++知识:
+- 初始化列表
+- const的使用
+- 指针
+- 重载运算符
+- 异常处理
+
+下一步，我们将跳出二维矩阵，从tensor的视角，直视内存空间和排列，同时，我们将思考实际的工程问题和突发情况。
+注意，下一节中的内容，对你于指针的理解提出了较高的要求，如果有些陌生，建议复习一下指针。
+如果你准备好了，请移步tensor.h
+*/
