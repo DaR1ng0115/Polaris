@@ -1,84 +1,99 @@
-// 
+//
 // tensor.cpp
 // Polaris
-//
-// Created by DaR1ng on 26-7-9
+// 
+// Created by DaR1ng on 26-7-10
 
 #include "../include/tensor.h"
-#include <cassert>
 
-Tensor::Tensor() 
-:rows_(1), cols_(1), data_(0) {
-    this->data_ = std::vector<float>(1);
-}
+Tensor::Tensor()
+:strides_(0), shape_(), data_(nullptr), length_(0) {}
 
-Tensor::Tensor(int rows, int cols)
-:rows_(rows), cols_(cols) {
-    this->data_ = std::vector<float>(this->rows_*this->cols_);
-    for(int i=0; i<this->length(); ++i) {
-        this->data_[i] = 0.0f;
+Tensor::Tensor(const std::vector<int64_t> &shape) 
+:shape_(shape), length_(1), strides_(shape.size(), 1) {
+    for(int i=0; i<shape.size(); ++i) {
+        length_ *= shape[i];
+        for(int j=shape.size()-1; j>i; --j) {
+            strides_[i] *= shape[j];
+        }
     }
+    data_ = (float*)calloc(length_, sizeof(float));
 }
 
-Tensor::Tensor(int rows, int cols, float fill_data)
-:rows_(rows), cols_(cols) {
-    this->data_ = std::vector<float>(this->rows_*this->cols_);
-    for(int i=0; i<this->length(); ++i) {
+Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
+:shape_(shape), length_(1), strides_(shape.size(), 1) {
+    for(int i=0; i<shape.size(); ++i) {
+        length_ *= shape[i];
+        for(int j=shape.size()-1; j>i; --j) {
+            strides_[i] *= shape[j];
+        }
+    }
+    data_ = (float*)malloc(length_*sizeof(float));
+    for(int i=0; i<length_; ++i) {
         data_[i] = fill_data;
     }
 }
 
-float Tensor::at(int rows_idx, int cols_idx) const {
-        return this->data()[rows_idx*this->cols() + cols_idx];
-    }
-
-int Tensor::rows() const {
-    return this->rows_;
+Tensor::~Tensor() {
+    free(data_);
+    data_ = nullptr;
 }
 
-int Tensor::cols() const {
-    return this->cols_;
+int64_t Tensor::shape(int dim) {
+    return shape_[dim-1];
 }
 
-int Tensor::length() const {
-    return this->data_.size();
+const std::vector<int64_t> Tensor::shape() const {
+    return shape_;
+}
+
+const std::vector<int64_t> Tensor::strides() const {
+    return strides_;
+}
+
+int64_t Tensor::length() {
+    return length_;
+}
+
+int64_t Tensor::length() const {
+    return length_;
 }
 
 float* Tensor::data() {
-    return this->data_.data();
+    return data_;
 }
 
 const float* Tensor::data() const {
-    return this->data_.data();
+    return data_;
+}
+
+void Tensor::copy(const Tensor& other) {
+    std::copy(other.data(), other.data()+other.length(), data_);
 }
 
 Tensor Tensor::operator+(const Tensor& other) const {
-    assert(this->rows() == other.rows() && this->cols() == other.cols());
-    Tensor res(this->rows(), this->cols());
-    for(int i=0; i<this->length(); ++i) {
-        res.data()[i] = this->data_[i] + other.data()[i];
+    assert(shape_ == other.shape());
+    Tensor res(shape_);
+    for(int i=0; i<length_; ++i) {
+        res.data_[i] = data_[i] + other.data_[i];
     }
     return res;
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
-    if(this->rows() == 1 && this->cols() == 1 && this->at(0, 0) == 0.0f) {
-        this->data_ = std::vector<float>(other.rows()*other.cols());
-        this->rows_ = other.rows(); this->cols_ = other.cols();
+    if(data_ == nullptr) {
+        length_ = 1;
+        for(int i=0; i<other.shape().size(); ++i) {
+            length_ *= other.shape()[i];
+            for(int j=shape().size()-1; j>i; --j) {
+                strides_[i] *= other.shape()[j];
+            }
     }
-    assert(this->rows() == other.rows() && this->cols() == other.cols());
-    for(int i=0; i<this->length(); ++i) {
-        this->data_[i] = other.data()[i];
+    data_ = (float*)calloc(length_, sizeof(float));
+    }
+    assert(shape_ == other.shape());
+    for(int i=0; i<other.length(); ++i) {
+        data_[i] = other.data()[i];
     }
     return *this;
-}
-
-float& Tensor::operator()(int rows_idx, int cols_idx) {
-    assert(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_);
-    return this->data_[rows_idx*this->cols_+cols_idx];
-}
-
-const float& Tensor::operator()(int rows_idx, int cols_idx) const {
-    assert(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_);
-    return this->data_[rows_idx*this->cols_+cols_idx];
 }

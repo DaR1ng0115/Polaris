@@ -6,4 +6,4 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-add_executable(main src/main.cpp src/tensor.cpp test/tensor_test.cpp)
+add_executable(main src/main.cpp src/matrix.cpp src/tensor.cpp)

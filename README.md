@@ -44,4 +44,4 @@ Linear algebra is not a very advanced field. You can think of linear algebra as 
 Obviously, these two equations cannot be solved for a unique solution because the second equation is just twice the first equation. Therefore, we say that this equation does not carry enough information.
 
 ## Guide
-Next, you can go to [tensor.h](/include/tensor.h) to start your first learning. If you encounter any confusion during the learning process, it is recommended to ask AI, but please ensure that you can reproduce it without relying on AI.
+Next, you can go to [matrix.h](/include/matrix.h) to start your first learning. If you encounter any confusion during the learning process, it is recommended to ask AI, but please ensure that you can reproduce it without relying on AI. If you know how to use agents like Claude code or Codex, you can clone this project locally and input the following prompt: "Please help me analyze this project and tell me 1. How to learn this project 2. What is the structure of this project 3. What kind of people is this project suitable for learning."
