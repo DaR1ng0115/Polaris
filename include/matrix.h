@@ -39,6 +39,7 @@ public:
     Matrix();
     Matrix(int rows, int cols);
     Matrix(int rows, int cols, float fill_data);
+    Matrix(const Matrix& other);
 
 // 此处是读取/修改matrix的方法，同样思考，你可能会如何使用一个matrix，你希望它具备什么功能？
 // 如果没有头绪，可以参照此处的函数，但强烈建议你尽可能自己思考：不是函数催生功能，而是功能催生函数

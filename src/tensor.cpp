@@ -34,6 +34,16 @@ Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
     }
 }
 
+Tensor::Tensor(const Tensor& other) {
+    std::copy(other.data(), other.data()+other.length(), data_);
+}
+
+Tensor::Tensor(Tensor&& other)
+:strides_(std::move(other.strides_)), shape_(std::move(other.shape_)), data_(other.data_), length_(other.length_) {
+    other.data_ = nullptr;
+    other.length_ = 0;
+}
+
 Tensor::~Tensor() {
     free(data_);
     data_ = nullptr;
@@ -67,10 +77,6 @@ const float* Tensor::data() const {
     return data_;
 }
 
-void Tensor::copy(const Tensor& other) {
-    std::copy(other.data(), other.data()+other.length(), data_);
-}
-
 // 
 
 Tensor Tensor::operator+(const Tensor& other) const {
@@ -83,6 +89,7 @@ Tensor Tensor::operator+(const Tensor& other) const {
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
+    if(this == &other) return;
     if(data_ == nullptr) {
         shape_ = other.shape();
         strides_.resize(shape_.size());
@@ -96,7 +103,19 @@ Tensor& Tensor::operator=(const Tensor& other) {
     data_ = (float*)calloc(length_, sizeof(float));
     }
     assert(shape_ == other.shape());
-    copy(other);
+    std::copy(other.data(), other.data()+other.length(), data_);
+    return *this;
+}
+
+Tensor& Tensor::operator=(Tensor&& other) {
+    if(this == &other) return;
+    free(data_);
+    strides_ = std::move(other.strides_);
+    shape_ = std::move(other.shape_);
+    data_ = other.data_;
+    length_ = other.length_;
+    other.data_ = nullptr;
+    other.length_ = 0;
     return *this;
 }
 

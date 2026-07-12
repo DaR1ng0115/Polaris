@@ -48,9 +48,14 @@ private:
     float* data_;
     int64_t length_;
 public:
+// 这里仿照了matrix类定义的格式，但将实际的行和列换成了shape数组
+// 同时由于我们选择了float*裸指针来描述tensor的数据，构造函数中会用到malloc来分配堆内存，因而需要完善析构函数的内容，
+// 使其可以free对象在构造时申请的堆内存，并将指针悬空
     Tensor();
     Tensor(const std::vector<int64_t> &shape);
     Tensor(const std::vector<int64_t> &shape, float fill_data);
+    Tensor(const Tensor& other);
+    Tensor(Tensor&& other) noexcept;
     ~Tensor();
 
     int64_t shape(int dim);
@@ -60,10 +65,10 @@ public:
     int64_t length() const;
     float* data();
     const float* data() const;
-    void copy(const Tensor& other);
 
     Tensor operator+(const Tensor& other) const;
     Tensor& operator=(const Tensor& other);
+    Tensor& operator=(Tensor&& other) noexcept;
     float& operator()(int rows_idx, int cols_idx);
     const float& operator()(int rows_idx, int cols_idx) const;
 };
