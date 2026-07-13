@@ -58,7 +58,7 @@ public:
     Tensor(Tensor&& other) noexcept;
     ~Tensor();
 
-    int64_t shape(int dim);
+    int64_t shape(int dim) const;
     const std::vector<int64_t> shape() const;
     const std::vector<int64_t> strides() const;
     int64_t length();
