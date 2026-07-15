@@ -68,7 +68,7 @@ Tensor::Tensor(const Tensor& other) {
 // 这和移动构造有什么关系呢？重点在于，移动构造在于"移动"，不会发生拷贝，也就是说，如果传入的是一个左值（持久对象）
 // 那么这个左值对象就变成空对象了。如果想保留传入对象，那就必须用拷贝构造。
 
-Tensor::Tensor(Tensor&& other)
+Tensor::Tensor(Tensor&& other) noexcept
 // std::move()并不是移动本身，而是将一个左值对象强行转化为右值对象，以完成移动语义
 // 移动语义的根本之处其实在于这两行:
 // data_ = other.data_;
@@ -125,7 +125,7 @@ Tensor Tensor::operator+(const Tensor& other) const {
 }
 
 Tensor& Tensor::operator=(const Tensor& other) {
-    if(this == &other) return;
+    if(this == &other) return *this;
     if(data_ == nullptr) {
         shape_ = other.shape();
         strides_.resize(shape_.size());
@@ -147,8 +147,8 @@ Tensor& Tensor::operator=(const Tensor& other) {
 // 再次提醒，对于非RAII属性，在进行移动之后，一定要将其清零或置空
 // 否则很容易会导致double free
 
-Tensor& Tensor::operator=(Tensor&& other) {
-    if(this == &other) return;
+Tensor& Tensor::operator=(Tensor&& other) noexcept {
+    if(this == &other) return *this;
     free(data_);
     strides_ = std::move(other.strides_);
     shape_ = std::move(other.shape_);
@@ -176,3 +176,8 @@ const float& Tensor::operator()(int rows_idx, int cols_idx) const {
     assert(shape_.size() == 2 && rows_idx >= 0 && cols_idx >= 0 && rows_idx < shape_[0] && cols_idx < shape_[1]);
     return data_[rows_idx*strides_[1] + cols_idx*strides_[0]];
 }
+
+/*
+至此，tensor类的定义和功能基本实现，接下来，我们将进入计算图的构建，其中将运用大量数据结构的知识。
+建议先学习图结构，拓扑排序等之后再学习下一章节
+*/
