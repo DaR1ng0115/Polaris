@@ -94,8 +94,8 @@ Matrix Matrix::operator+(const Matrix &other) const {
 }
 
 Matrix& Matrix::operator=(const Matrix &other) {
-    if(this == &other) return;
-    if(this->rows() == 1 && this->cols() == 1 && this->data_[0, 0] == 0.0f) {
+    if(this == &other) return *this;
+    if(this->rows() == 1 && this->cols() == 1 && this->data_[0] == 0.0f) {
         this->data_ = std::vector<float>(other.rows()*other.cols());
         this->rows_ = other.rows(); this->cols_ = other.cols();
     }
