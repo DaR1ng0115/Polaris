@@ -24,11 +24,15 @@ Matrix::Matrix()
 
 Matrix::Matrix(int rows, int cols)
 :rows_(rows), cols_(cols) {
+    if(rows<0 && cols<0)
+        throw("The rows or cols can not be negative number");
     this->data_ = std::vector<float>(this->rows_*this->cols_);
 }
 
 Matrix::Matrix(int rows, int cols, float fill_data)
 :rows_(rows), cols_(cols) {
+    if(rows<0 && cols<0)
+        throw("The rows or cols can not be negative number");
     this->data_ = std::vector<float>(this->rows_*this->cols_, fill_data);
 }
 
@@ -124,12 +128,14 @@ Matrix& Matrix::operator=(const Matrix &other) {
 // 想访问的数据，翻译成数学语言，也就是:rows_idx*cols_ + cols_idx
 
 float& Matrix::operator()(int rows_idx, int cols_idx) {
-    assert(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_);
+    if(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_)
+        throw("Index access is illegal");
     return this->data_[rows_idx*this->cols_+cols_idx];
 }
 
 const float& Matrix::operator()(int rows_idx, int cols_idx) const {
-    assert(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_);
+    if(rows_idx>=0 && cols_idx>=0 && rows_idx<this->rows_ && cols_idx<this->cols_)
+        throw("Index access is illegal");
     return this->data_[rows_idx*this->cols_+cols_idx];
 }
 

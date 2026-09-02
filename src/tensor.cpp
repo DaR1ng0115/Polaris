@@ -56,10 +56,11 @@ Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
 // 我们常说vector的拷贝和std::copy是深拷贝，其实是相对意义上的，对于无指针嵌套的对象的确是深拷贝。
 
 Tensor::Tensor(const Tensor& other) {
-    std::copy(other.data(), other.data()+other.length(), data_);
     strides_ = other.strides();
     shape_ = other.shape();
     length_ = other.length();
+    data_ = (float*)malloc(length_*sizeof(float));
+    std::copy(other.data(), other.data()+other.length(), data_);
 }
 
 // 此处是移动构造函数
@@ -99,10 +100,6 @@ const std::vector<int64_t> Tensor::strides() const {
     return strides_;
 }
 
-int64_t Tensor::length() {
-    return length_;
-}
-
 int64_t Tensor::length() const {
     return length_;
 }
@@ -128,7 +125,7 @@ Tensor& Tensor::operator=(const Tensor& other) {
     if(this == &other) return *this;
     if(data_ == nullptr) {
         shape_ = other.shape();
-        strides_.resize(shape_.size());
+        strides_.assign(shape_.size(), 1); // 如果容量不够，可能导致反复分配内存空间导致性能抖动，可以使用reserve预分配内存空间
         length_ = 1;
         for(int i=0; i<other.shape().size(); ++i) {
             length_ *= other.shape()[i];
@@ -154,6 +151,8 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
     shape_ = std::move(other.shape_);
     data_ = other.data_;
     length_ = other.length_;
+    other.strides_.clear();
+    other.shape_.clear();
     other.data_ = nullptr;
     other.length_ = 0;
     return *this;
@@ -169,10 +168,10 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 
 float& Tensor::operator()(int rows_idx, int cols_idx) {
     assert(shape_.size() == 2 && rows_idx >= 0 && cols_idx >= 0 && rows_idx < shape_[0] && cols_idx < shape_[1]);
-    return data_[rows_idx*strides_[1] + cols_idx*strides_[0]];
+    return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
 }
 
 const float& Tensor::operator()(int rows_idx, int cols_idx) const {
     assert(shape_.size() == 2 && rows_idx >= 0 && cols_idx >= 0 && rows_idx < shape_[0] && cols_idx < shape_[1]);
-    return data_[rows_idx*strides_[1] + cols_idx*strides_[0]];
+    return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
 }
