@@ -1,6 +1,6 @@
 // 
 // matrix.h
-// Polaris
+// GraceInfra
 //
 // Created by DaR1ng on 26-7-9
 
@@ -22,6 +22,9 @@ Then, learn the following content with these questions in mind.
 
 #pragma once
 #include <vector>
+#include <cstdlib>
+#include <algorithm>
+#include <utility>
 
 class Matrix {
 private:

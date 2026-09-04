@@ -1,6 +1,6 @@
 //
 // tensor.h
-// Polaris
+// GraceInfra
 //
 // Created by DaR1ng on 26-7-10
 
@@ -22,6 +22,10 @@
 // int64_t的头文件，int64_t是64位int类型，32位int在深度学习中有概率溢出
 #include <cstdlib>
 #include <assert.h>
+#include <algorithm>
+#include <utility>
+#include <cstdint>
+#include "exceptions.h"
 
 /*
 对于顺序存储数组+strides实现tensor，其具体的实现方法也有不少种类，这里就拿我比较熟悉的两类方式谈论一下。
@@ -43,10 +47,10 @@ private:
 // 其次是std::vector<int64_t> shape_这个比较好理解，它代表了每个维度的数值，比如Tensor t1(2, 3, 4)的shape_即为[2, 3, 4]。
 // 最后是int64_t length_这个可能算是最不重要的那一个，它代表了当这个张量压缩到一维时，其长度为多少，简单来说就是张量的数据总数量
 // 当然，这个length_可以不要，实现一个length()函数即可
+    std::vector<int64_t> shape_; 
     std::vector<int64_t> strides_;
-    std::vector<int64_t> shape_;
-    float* data_;
     int64_t length_;
+    float* data_;
 public:
 // 这里仿照了matrix类定义的格式，但将实际的行和列换成了shape数组
 // 同时由于我们选择了float*裸指针来描述tensor的数据，构造函数中会用到malloc来分配堆内存，因而需要完善析构函数的内容，
@@ -58,10 +62,9 @@ public:
     Tensor(Tensor&& other) noexcept;
     ~Tensor();
 
-    int64_t shape(int dim) const;
-    const std::vector<int64_t> shape() const;
-    const std::vector<int64_t> strides() const;
-    int64_t length();
+    int64_t shape(int64_t dim) const;
+    const std::vector<int64_t>& shape() const;
+    const std::vector<int64_t>& strides() const;
     int64_t length() const;
     float* data();
     const float* data() const;

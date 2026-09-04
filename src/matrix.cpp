@@ -1,6 +1,6 @@
 // 
 // matrix.cpp
-// Polaris
+// GraceInfra
 //
 // Created by DaR1ng on 26-7-9
 
@@ -95,14 +95,10 @@ Matrix Matrix::operator+(const Matrix &other) const {
 
 Matrix& Matrix::operator=(const Matrix &other) {
     if(this == &other) return *this;
-    if(this->rows() == 1 && this->cols() == 1 && this->data_[0] == 0.0f) {
-        this->data_ = std::vector<float>(other.rows()*other.cols());
-        this->rows_ = other.rows(); this->cols_ = other.cols();
-    }
-    assert(this->rows() == other.rows() && this->cols() == other.cols());
-    for(int i=0; i<this->length(); ++i) {
-        this->data_[i] = other.data()[i];
-    }
+    Matrix temp(other);
+    this->rows_ = other.rows();
+    this->cols_ = other.cols();
+    this->data_ = std::move(temp.data_);
     return *this;
 }
 

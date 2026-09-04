@@ -4,12 +4,12 @@
 [简体中文](README.zh.md)
 
 ## INTRODUCTION
-Polaris is a deep learning training and inference framework that focuses on *teaching* from scratch. The entire project is developed using C++ and CUDA, so you need to have a certain foundation in C++.
+GraceInfra is a deep learning training and inference framework that focuses on *teaching* from scratch. The entire project is developed using C++ and CUDA, so you need to have a certain foundation in C++.
 This project focuses on high performance, supplemented by deep learning frameworks, to learn low-level thinking (the author is also continuously learning :))  
 Therefore, if you just want to understand *automatic differentiation*, *computational graphs*, *Transformer principles*, then you can choose other better projects, such as karpathy/micrograd or tinygrad.  
 If you want to *train a large model using C++*, *know what is happening inside PyTorch*, *learn data structures, computer organization principles, and computer architecture in programming applications*,  
 then this project is the best choice.
-Since I am a junior student, there may inevitably be bugs, omissions, inaccuracies, and even errors in the project. I hope everyone can be understanding, and I am also happy to accept criticism and corrections.  
+Since I am a student, there may inevitably be bugs, omissions, inaccuracies, and even errors in the project. I hope everyone can be understanding, and I am also happy to accept criticism and corrections.  
 
 In this chapter, we focus on:
 - Engineering specifications
