@@ -49,7 +49,7 @@ public:
 
     int rows() const;
     int cols() const;
-    int length() const;
+    int numel() const;
     float* data();
     const float* data() const;
 

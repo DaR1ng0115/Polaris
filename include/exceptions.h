@@ -32,4 +32,10 @@ namespace poerror {
         explicit DimensionException(const std::string& msg)
         :AppException(msg) {}
     };
+
+    class OverflowException : public AppException {
+    public:
+        explicit OverflowException(const std::string& msg)
+        :AppException(msg) {}
+    };
 }

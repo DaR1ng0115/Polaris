@@ -5,11 +5,14 @@
 // Created by DaR1ng on 26-7-10
 
 #include "../include/tensor.h"
-#include <cstdint>
+#include <assert.h>
+#include <algorithm>
+#include <utility>
+#include <limits>
 
 
 Tensor::Tensor()
-:shape_(), strides_(), data_(nullptr), length_(0) {}
+:shape_(), strides_(), data_(nullptr) {}
 
 // 在理解下面这些代码之前，请再次回顾一下各个变量的含义。
 // strides 用于映射到一维索引,shape 各维度数,data 实际存储数组的一维顺序数组的首地址,length 元素总数
@@ -28,51 +31,39 @@ Tensor::Tensor()
 // 1.空对象，shape为空，strides为空，length为0，data为nullptr
 // 2.无元素tensor（shape中包含0维度），shape为原始状态，strides为根据公式计算得出，length为0，data为nullptr
 Tensor::Tensor(const std::vector<int64_t> &shape) 
-:shape_(shape), strides_(shape.size(), 1), length_(1), data_(nullptr) {
+:shape_(shape), strides_(shape.size(), 1), data_(nullptr) {
     for(auto dim : shape) {
         if(dim < 0) throw poerror::DimensionException("Illegal dimensions");
-        if(dim == 0) length_ = 0;
-    }
-    if(shape.empty()) {
-        length_ = 0;
-        return;
-    }
-    for(auto dim : shape) {
-        length_ *= dim;
     }
     for(int64_t j=static_cast<int64_t>(shape.size())-1; j>0; --j) {
-        strides_[j-1] = strides_[j] * shape[j];
+        bool issafe = safe_multiply(strides_[j], shape_[j], strides_[j-1]);
+        if(!issafe) throw poerror::OverflowException("Numeric overflow");
     }
 // calloc和malloc类似，不同的是，一个是参入的参数不一样，分别是数据的数量和单个数据大小，另一个是默认所有元素填充为0
 // 为什么使用static_cast而不使用(float*)?
 // （float*）是C语言风格，其权限很大，可能改变变量的const特性，甚至进行一些很危险的类型转换
 // 而static_cast则更加安全，并且它的功能在该场景下也能完全胜任，因此选择static_cast
-    if(length_ > 0) {
-        data_ = static_cast<float*>(calloc(length_, sizeof(float)));
+    int64_t numel = this->numel();
+    if(numel > 0) {
+        data_ = static_cast<float*>(calloc(numel, sizeof(float)));
         if(data_ == nullptr) throw poerror::MemoryException("Memory allocation failed");
     }
 }
 
 Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
-:shape_(shape), strides_(shape.size(), 1), length_(1), data_(nullptr) {
+:shape_(shape), strides_(shape.size(), 1), data_(nullptr) {
     for(auto dim : shape) {
         if(dim < 0) throw poerror::DimensionException("Illegal dimensions");
-        if(dim == 0) length_ = 0;
-    }
-    if(shape.empty()) {
-        length_ = 0;
-        return;
-    }
-    for(auto dim : shape) {
-        length_ *= dim;
     }
     for(int64_t j=static_cast<int64_t>(shape.size())-1; j>0; --j) {
-        strides_[j-1] = strides_[j] * shape[j];
+        bool issafe = safe_multiply(strides_[j], shape_[j], strides_[j-1]);
+        if(!issafe) throw poerror::OverflowException("Numeric overflow");
     }
-    if(length_ > 0) {
-        data_ = static_cast<float*>(malloc(length_*sizeof(float)));
+    int64_t numel = this->numel();
+    if(numel > 0) {
+        data_ = static_cast<float*>(malloc(numel*sizeof(float)));
         if(data_ == nullptr) throw poerror::MemoryException("Memory allocation failed");
-        for(int64_t i=0; i<length_; ++i) {
+        for(int64_t i=0; i<numel; ++i) {
             data_[i] = fill_data;
         }
     }
@@ -88,15 +79,14 @@ Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
 // 我们常说vector的拷贝和std::copy是深拷贝，其实是相对意义上的，对于无指针嵌套的对象的确是深拷贝。
 
 Tensor::Tensor(const Tensor& other)
-:shape_(0), strides_(0), length_(0), data_(nullptr) {
+:shape_(0), strides_(0), data_(nullptr) {
 // 判定空对象和无元素对象
     shape_ = other.shape();
     strides_ = other.strides();
-    length_ = other.length();
-    if(other.length() != 0) {
-        data_ = static_cast<float*>(malloc(length_*sizeof(float)));
+    if(other.numel() != 0) {
+        data_ = static_cast<float*>(malloc(this->numel()*sizeof(float)));
         if(data_ == nullptr) throw poerror::MemoryException("Memory allocation failed");
-        std::copy(other.data(), other.data()+other.length(), data_);
+        std::copy(other.data(), other.data()+other.numel(), data_);
     }
 }
 
@@ -112,7 +102,7 @@ Tensor::Tensor(Tensor&& other) noexcept
 // data_ = other.data_;
 // other.data_ = nullptr;
 // 第一步是所有权转移，第二步就是原指针置空
-:shape_(std::move(other.shape_)), strides_(std::move(other.strides_)), data_(other.data_), length_(other.length_) {
+:shape_(std::move(other.shape_)), strides_(std::move(other.strides_)), data_(other.data_) {
 // 不知大家有没有听过这样的说法：对于标准库对象使用std::move之后，会自动释放原对象
 // 我当时听了之后，让我误以为标准库保证原对象的data一定会是nullptr
 // 但是我今天去查看了cppreference之后，发现并不是这么一回事
@@ -126,7 +116,6 @@ Tensor::Tensor(Tensor&& other) noexcept
     other.strides_.clear();
     other.shape_.clear();
     other.data_ = nullptr;
-    other.length_ = 0;
 }
 
 // 此处的析构函数切不可忘记实现，否则会发生内存泄漏，这在深度学习训练中尤其严重
@@ -153,8 +142,14 @@ const std::vector<int64_t>& Tensor::strides() const {
     return strides_;
 }
 
-int64_t Tensor::length() const {
-    return length_;
+int64_t Tensor::numel() const {
+    if(shape_.empty()) return 0;
+    int64_t res = 1;
+    for(auto dim : shape_) {
+        bool issafe = safe_multiply(res, dim, res);
+        if(!issafe) throw poerror::OverflowException("Numeric overflow");
+    }
+    return res;
 }
 
 float* Tensor::data() {
@@ -165,10 +160,24 @@ const float* Tensor::data() const {
     return data_;
 }
 
+bool Tensor::safe_multiply(int64_t a, int64_t b, int64_t& result) {
+    if(a>0) {
+        if(b>0 && a > std::numeric_limits<int64_t>::max() / b) return false;
+        if(b<0 && a < std::numeric_limits<int64_t>::min() / b) return false;
+    }
+    if(a<0) {
+        if(b>0 && a < std::numeric_limits<int64_t>::min() / b) return false;
+        if(b<0 && a > std::numeric_limits<int64_t>::max() / b) return false;
+    }
+    result = a*b;
+    return true;
+}
+
 Tensor Tensor::operator+(const Tensor& other) const {
     if(shape_ != other.shape()) throw poerror::DimensionException("Dimensions dismatch");
     Tensor res(shape_);
-    for(int64_t i=0; i<length_; ++i) {
+    int64_t numel = this->numel();
+    for(int64_t i=0; i<numel; ++i) {
         res.data_[i] = data_[i] + other.data_[i];
     }
     return res;
@@ -176,16 +185,16 @@ Tensor Tensor::operator+(const Tensor& other) const {
 
 Tensor& Tensor::operator=(const Tensor& other) {
     if(this == &other) return *this;
-    if(shape_ == other.shape() && length_ != 0 && other.length() != 0) {
-        std::copy(other.data(), other.data()+other.length(), data_);
+    int64_t numel = this->numel();
+    if(shape_ == other.shape() && numel != 0 && other.numel() != 0) {
+        std::copy(other.data(), other.data()+other.numel(), data_);
         assert(strides_ == other.strides());
-        assert(length_ == other.length());
+        assert(numel == other.numel());
     }
     else {
         Tensor temp(other);
         std::swap(shape_, temp.shape_);
         std::swap(strides_, temp.strides_);
-        std::swap(length_, temp.length_);
         std::swap(data_, temp.data_);
     }
     return *this;
@@ -200,12 +209,10 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
     free(data_);
     shape_ = std::move(other.shape_);
     strides_ = std::move(other.strides_);
-    length_ = other.length_;
     data_ = other.data_;
     other.shape_.clear();
     other.strides_.clear();
     other.data_ = nullptr;
-    other.length_ = 0;
     return *this;
 }
 
@@ -218,13 +225,13 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 // 因而此处选择第三种方式
 
 float& Tensor::operator()(int rows_idx, int cols_idx) {
-    if(shape_.size() != 2 && rows_idx < 0 && cols_idx < 0 && rows_idx >= shape_[0] && cols_idx >= shape_[1])
+    if(shape_.size() != 2 || rows_idx < 0 || cols_idx < 0 || rows_idx >= shape_[0] || cols_idx >= shape_[1])
         throw poerror::AppException("Unspport temporarily");
     return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
 }
 
 const float& Tensor::operator()(int rows_idx, int cols_idx) const {
-    if(shape_.size() != 2 && rows_idx < 0 && cols_idx < 0 && rows_idx >= shape_[0] && cols_idx >= shape_[1])
+    if(shape_.size() != 2 || rows_idx < 0 || cols_idx < 0 || rows_idx >= shape_[0] || cols_idx >= shape_[1])
         throw poerror::AppException("Unspport temporarily");
     return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
 }

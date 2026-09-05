@@ -51,7 +51,7 @@ int Matrix::cols() const {
 
 // 此处我特意选择了length作为方法的名称，因为其专指matrix的“长度”，即无论是几维的matrix，压平成一维数组后的长度
 
-int Matrix::length() const {
+int Matrix::numel() const {
     return this->data_.size();
 }
 
@@ -87,7 +87,7 @@ const float* Matrix::data() const {
 Matrix Matrix::operator+(const Matrix &other) const {
     assert(this->rows() == other.rows() && this->cols() == other.cols());
     Matrix res(this->rows(), this->cols());
-    for(int i=0; i<this->length(); ++i) {
+    for(int i=0; i<this->numel(); ++i) {
         res.data()[i] = this->data_[i] + other.data()[i];
     }
     return res;

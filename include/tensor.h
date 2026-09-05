@@ -20,11 +20,8 @@
 #pragma once
 #include <vector>
 // int64_t的头文件，int64_t是64位int类型，32位int在深度学习中有概率溢出
-#include <cstdlib>
-#include <assert.h>
-#include <algorithm>
-#include <utility>
 #include <cstdint>
+#include <cstdlib>
 #include "exceptions.h"
 
 /*
@@ -45,11 +42,10 @@ private:
 // 首先float* data_是必要的，这是核心属性
 // 然后std::vector<int64_t> strides_这是实现任意维度的关键，后续我会说明它为什么是一个数组
 // 其次是std::vector<int64_t> shape_这个比较好理解，它代表了每个维度的数值，比如Tensor t1(2, 3, 4)的shape_即为[2, 3, 4]。
-// 最后是int64_t length_这个可能算是最不重要的那一个，它代表了当这个张量压缩到一维时，其长度为多少，简单来说就是张量的数据总数量
-// 当然，这个length_可以不要，实现一个length()函数即可
+// 最后是int64_t numel_这个可能算是最不重要的那一个，它代表了当这个张量压缩到一维时，其数据总数量
+// 当然，这个numel_可以不要，实现一个numel()函数即可
     std::vector<int64_t> shape_; 
     std::vector<int64_t> strides_;
-    int64_t length_;
     float* data_;
 public:
 // 这里仿照了matrix类定义的格式，但将实际的行和列换成了shape数组
@@ -65,9 +61,10 @@ public:
     int64_t shape(int64_t dim) const;
     const std::vector<int64_t>& shape() const;
     const std::vector<int64_t>& strides() const;
-    int64_t length() const;
+    int64_t numel() const;
     float* data();
     const float* data() const;
+    static bool safe_multiply(int64_t a, int64_t b, int64_t& result);
 
     Tensor operator+(const Tensor& other) const;
     Tensor& operator=(const Tensor& other);
