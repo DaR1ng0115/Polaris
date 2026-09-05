@@ -4,11 +4,13 @@
 // 
 // Created by DaR1ng on 26-7-10
 
-#include "../include/tensor.h"
 #include <assert.h>
 #include <algorithm>
+#include <cstdint>
 #include <utility>
 #include <limits>
+#include "../include/tensor.h"
+#include "../include/exceptions.h"
 
 
 Tensor::Tensor()
@@ -79,10 +81,8 @@ Tensor::Tensor(const std::vector<int64_t> &shape, float fill_data)
 // 我们常说vector的拷贝和std::copy是深拷贝，其实是相对意义上的，对于无指针嵌套的对象的确是深拷贝。
 
 Tensor::Tensor(const Tensor& other)
-:shape_(0), strides_(0), data_(nullptr) {
+:shape_(other.shape()), strides_(other.strides()), data_(nullptr) {
 // 判定空对象和无元素对象
-    shape_ = other.shape();
-    strides_ = other.strides();
     if(other.numel() != 0) {
         data_ = static_cast<float*>(malloc(this->numel()*sizeof(float)));
         if(data_ == nullptr) throw poerror::MemoryException("Memory allocation failed");
@@ -174,7 +174,7 @@ bool Tensor::safe_multiply(int64_t a, int64_t b, int64_t& result) {
 }
 
 Tensor Tensor::operator+(const Tensor& other) const {
-    if(shape_ != other.shape()) throw poerror::DimensionException("Dimensions dismatch");
+    if(shape_ != other.shape()) throw poerror::DimensionException("Dimensions mismatch");
     Tensor res(shape_);
     int64_t numel = this->numel();
     for(int64_t i=0; i<numel; ++i) {
@@ -224,16 +224,16 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 // 选择3: 固定二维访问，能更好的衔接前面的学习，并且重构成本不高，改为可变参模版，前面的二维索引访问仍可用
 // 因而此处选择第三种方式
 
-float& Tensor::operator()(int rows_idx, int cols_idx) {
-    if(shape_.size() != 2 || rows_idx < 0 || cols_idx < 0 || rows_idx >= shape_[0] || cols_idx >= shape_[1])
-        throw poerror::AppException("Unspport temporarily");
-    return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
+float& Tensor::operator()(int64_t idx0, int64_t idx1) {
+    if(shape_.size() != 2 || idx0 < 0 || idx1 < 0 || idx0 >= shape_[0] || idx1 >= shape_[1])
+        throw poerror::AppException("Unsupport temporarily");
+    return data_[idx0*strides_[0] + idx1*strides_[1]];
 }
 
-const float& Tensor::operator()(int rows_idx, int cols_idx) const {
-    if(shape_.size() != 2 || rows_idx < 0 || cols_idx < 0 || rows_idx >= shape_[0] || cols_idx >= shape_[1])
-        throw poerror::AppException("Unspport temporarily");
-    return data_[rows_idx*strides_[0] + cols_idx*strides_[1]];
+const float& Tensor::operator()(int64_t idx0, int64_t idx1) const {
+    if(shape_.size() != 2 || idx0 < 0 || idx1 < 0 || idx0 >= shape_[0] || idx1 >= shape_[1])
+        throw poerror::AppException("Unsupport temporarily");
+    return data_[idx0*strides_[0] + idx1*strides_[1]];
 }
 
 
